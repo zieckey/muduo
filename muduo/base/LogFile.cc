@@ -60,8 +60,11 @@ class LogFile::File : boost::noncopyable
 
   size_t write(const char* logline, size_t len)
   {
-#undef fwrite_unlocked
-    return ::fwrite_unlocked(logline, 1, len, fp_);
+#ifdef fwrite_unlocked
+    return fwrite_unlocked(logline, 1, len, fp_);
+#else
+    return fwrite(logline, 1, len, fp_);
+#endif
   }
 
   FILE* fp_;

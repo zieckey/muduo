@@ -17,7 +17,9 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#ifndef __MACH__
 #include <linux/unistd.h>
+#endif
 
 namespace muduo
 {
@@ -33,10 +35,17 @@ namespace CurrentThread
 namespace detail
 {
 
+#ifdef __MACH__
+pid_t gettid()
+{
+  return pthread_mach_thread_np(pthread_self());
+}
+#else
 pid_t gettid()
 {
   return static_cast<pid_t>(::syscall(SYS_gettid));
 }
+#endif
 
 void afterFork()
 {
