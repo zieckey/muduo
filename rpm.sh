@@ -1,4 +1,4 @@
-git co builddev
+git co build
 TARGET=home/s/safe
 rm -rf $TARGET
 mkdir $TARGET/lib -p
