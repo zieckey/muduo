@@ -9,7 +9,7 @@ endif()
 set(CXX_FLAGS
  -g
  # -DVALGRIND
- # -DMUDUO_STD_STRING
+ -DMUDUO_STD_STRING
  -D_FILE_OFFSET_BITS=64
  -Wall
  -Wextra
