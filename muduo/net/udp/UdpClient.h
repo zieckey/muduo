@@ -46,15 +46,15 @@ class UdpClient : boost::noncopyable,
             const string& name);
   ~UdpClient();  // force out-line dtor, for scoped_ptr members.
 
-  /// connect the remote server
+  /// virtual 'connect' the remote server
   bool connect();
 
   /// close the socket
   void close();
 
   EventLoop* getLoop() const { return loop_; }
-  bool retry() const;
-  void enableRetry() { retry_ = true; }
+  //bool retry() const;
+  //void enableRetry() { retry_ = true; }
 
   // void send(string&& message); // C++11
   void send(const void* message, size_t len);
@@ -96,7 +96,6 @@ class UdpClient : boost::noncopyable,
   boost::scoped_ptr<Channel> channel_;
   bool retry_;   // atomic 
   bool connect_; // atomic 
-  int nextConnId_;
   boost::any context_;
 };
 

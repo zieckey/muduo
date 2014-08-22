@@ -56,8 +56,7 @@ UdpClient::UdpClient(EventLoop* loop,
     serverAddr_(serverAddr),
     //messageCallback_(defaultMessageCallback), //TODO
     retry_(false),
-    connect_(false),
-    nextConnId_(1)
+    connect_(false)
 {
   LOG_INFO << "UdpClient::UdpClient[" << name_
            << "] - remoteAddr " << serverAddr_.toIpPort();
@@ -223,6 +222,7 @@ void UdpClient::sendInLoop(const void* data, size_t len)
               detail::sockaddr_cast(&remoteAddr), addrLen);
   if (nwrote >= 0)
   {
+      //sent data OK
   }
   else // nwrote < 0
   {
