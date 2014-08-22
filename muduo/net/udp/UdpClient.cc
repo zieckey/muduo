@@ -107,7 +107,8 @@ bool UdpClient::connect()
 //      boost::bind(&UdpClient::handleClose, this));
 //  channel_->setErrorCallback(
 //      boost::bind(&UdpClient::handleError, this));
-
+  //channel_->tie(shared_from_this());
+  channel_->enableReading();
   connect_ = true;
   return true;
 }
@@ -242,6 +243,7 @@ void UdpClient::sendInLoop(const void* data, size_t len)
 
 void UdpClient::handleRead(Timestamp receiveTime)
 {
+  LOG_TRACE << " handleRead " << receiveTime.toFormattedString();
   loop_->assertInLoopThread();
   //int savedErrno = 0;
   size_t initialSize = 1472; // The UDP max payload size
