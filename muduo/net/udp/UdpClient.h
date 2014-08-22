@@ -39,6 +39,7 @@ class UdpClient : boost::noncopyable,
   typedef boost::function<void (const UdpClientPtr&,
                               BufferPtr&,
                               Timestamp)> UdpMessageCallback;
+  typedef boost::function<void (const UdpClientPtr&)> UdpWriteCompleteCallback;
  public:
   // UdpClient(EventLoop* loop, const string& host, uint16_t port);
   UdpClient(EventLoop* loop,
@@ -53,8 +54,6 @@ class UdpClient : boost::noncopyable,
   void close();
 
   EventLoop* getLoop() const { return loop_; }
-  //bool retry() const;
-  //void enableRetry() { retry_ = true; }
 
   // void send(string&& message); // C++11
   void send(const void* message, size_t len);
@@ -79,24 +78,28 @@ class UdpClient : boost::noncopyable,
 
   /// Set write complete callback.
   /// Not thread safe.
-  //void setWriteCompleteCallback(const WriteCompleteCallback& cb)
-  //{ writeCompleteCallback_ = cb; }
+  void setWriteCompleteCallback(const UdpWriteCompleteCallback& cb)
+  { writeCompleteCallback_ = cb; }
  private:
   void closeInLoop();
   //void sendInLoop(string&& message);
   void sendInLoop(const StringPiece& message);
   void sendInLoop(const void* message, size_t len);
   void handleRead(Timestamp receiveTime);
+  void handleError();
+  void handleWrite();
  private:
   EventLoop* loop_;
   const string name_;
   InetAddress serverAddr_;
   UdpMessageCallback messageCallback_;
-  //WriteCompleteCallback writeCompleteCallback_;
+  UdpWriteCompleteCallback writeCompleteCallback_;
   boost::scoped_ptr<Channel> channel_;
-  bool retry_;   // atomic 
   bool connect_; // atomic 
   boost::any context_;
+  typedef std::vector<string> stringvector;
+  stringvector outputMessages_;
+  stringvector outputMessagesCache_; //for effective
 };
 
 }

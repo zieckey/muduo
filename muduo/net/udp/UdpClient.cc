@@ -47,7 +47,6 @@ UdpClient::UdpClient(EventLoop* loop,
   : loop_(CHECK_NOTNULL(loop)),
     name_(name),
     serverAddr_(serverAddr),
-    retry_(false),
     connect_(false)
 {
   LOG_INFO << "UdpClient::UdpClient[" << name_
@@ -99,13 +98,13 @@ bool UdpClient::connect()
   channel_.reset(new Channel(getLoop(), sockfd));
   channel_->setReadCallback(
       boost::bind(&UdpClient::handleRead, this, _1));
-//  channel_->setWriteCallback(
-//      boost::bind(&UdpClient::handleWrite, this));
+  channel_->setWriteCallback(
+      boost::bind(&UdpClient::handleWrite, this));
 //  channel_->setCloseCallback(
 //      boost::bind(&UdpClient::handleClose, this));
-//  channel_->setErrorCallback(
-//      boost::bind(&UdpClient::handleError, this));
-//  channel_->tie(shared_from_this());
+  channel_->setErrorCallback(
+      boost::bind(&UdpClient::handleError, this));
+  channel_->tie(shared_from_this());
   channel_->enableReading();
   connect_ = true;
   return true;
@@ -219,11 +218,7 @@ void UdpClient::sendInLoop(const void* data, size_t len)
   socklen_t addrLen = sizeof(remoteAddr);
   nwrote = ::sendto(channel_->fd(), data, len, 0,
               detail::sockaddr_cast(&remoteAddr), addrLen);
-  if (nwrote >= 0)
-  {
-      //sent data OK
-  }
-  else // nwrote < 0
+  if (nwrote < 0)
   {
     nwrote = 0;
     if (errno != EWOULDBLOCK)
@@ -235,7 +230,15 @@ void UdpClient::sendInLoop(const void* data, size_t len)
       }
     }
 
-    //TODO FIXME fix this routine problem : when sendto return -1
+    string msg(static_cast<const char*>(data), len);
+    outputMessages_.push_back(msg);//FIXME if outputMessages_ goes toooooo big
+    channel_->enableWriting();
+  }
+  else
+  {
+    if (writeCompleteCallback_) {
+      writeCompleteCallback_(shared_from_this());
+    }
   }
 }
 
@@ -250,27 +253,47 @@ void UdpClient::handleRead(Timestamp receiveTime)
   ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
       inputBuffer->writableBytes(),
       0, &remoteAddr, &addrLen);
-  int savedErrno = sockets::getSocketError(channel_->fd());
-  if (readn == 0)
-  {
-    //TODO ERROR process
-    LOG_ERROR << "errno=" << savedErrno << " " << strerror(savedErrno) << " recvfrom return " << readn;
-    //handleClose();
-  }
-  else if (readn > 0)
+  if (readn > 0)
   {
     inputBuffer->hasWritten(readn);
     if (messageCallback_) {
       messageCallback_(shared_from_this(), inputBuffer, receiveTime);
     }
   }
+  else if (readn < 0)
+  {
+    handleError();
+  } 
   else
   {
-    //TODO ERROR process
-    LOG_ERROR << "errno=" << savedErrno << " " << strerror(savedErrno) << " recvfrom return " << readn;
-    //handleError();
-  } 
+      //nothing to do
+      //received a UDP data package with length = 0 is OK.
+  }
 }
+
+void UdpClient::handleError()
+{
+  int err = sockets::getSocketError(channel_->fd());
+  LOG_ERROR << "UdpClient::handleError [" << name_
+        << "] - SO_ERROR = " << err << " " << strerror_tl(err);
+}
+
+void UdpClient::handleWrite()
+{
+  LOG_INFO << "UdpClient::handleWrite outputMessages_.size=" << outputMessages_.size();
+  if (outputMessages_.empty()) {
+    return;
+  }
+  assert(outputMessagesCache_.empty());
+  outputMessagesCache_.swap(outputMessages_);
+  stringvector::iterator it (outputMessagesCache_.begin());
+  stringvector::iterator ite(outputMessagesCache_.end());
+  for (; it != ite; ++it) {
+    sendInLoop(it->data(), it->size());
+  }
+  outputMessagesCache_.clear();
+}
+
 
 
 
