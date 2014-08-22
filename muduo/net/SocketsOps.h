@@ -44,6 +44,9 @@ void fromIpPort(const char* ip, uint16_t port,
 
 int getSocketError(int sockfd);
 
+
+bool setNonblocking(int sockfd);
+
 struct sockaddr_in getLocalAddr(int sockfd);
 struct sockaddr_in getPeerAddr(int sockfd);
 bool isSelfConnect(int sockfd);
