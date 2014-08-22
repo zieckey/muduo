@@ -17,21 +17,10 @@
 #include <boost/bind.hpp>
 
 #include <stdio.h>  // snprintf
-#include <errno.h>  // snprintf
+#include <errno.h> 
 
 using namespace muduo;
 using namespace muduo::net;
-
-// UdpClient::UdpClient(EventLoop* loop)
-//   : loop_(loop)
-// {
-// }
-
-// UdpClient::UdpClient(EventLoop* loop, const string& host, uint16_t port)
-//   : loop_(CHECK_NOTNULL(loop)),
-//     serverAddr_(host, port)
-// {
-// }
 
 namespace muduo
 {
@@ -44,6 +33,10 @@ const SA* sockaddr_cast(const struct sockaddr_in* addr)
 {
   return static_cast<const SA*>(implicit_cast<const void*>(addr));
 }
+SA* sockaddr_cast(struct sockaddr_in* addr)
+{
+  return static_cast<SA*>(implicit_cast<void*>(addr));
+}
 }
 }
 }
@@ -54,7 +47,6 @@ UdpClient::UdpClient(EventLoop* loop,
   : loop_(CHECK_NOTNULL(loop)),
     name_(name),
     serverAddr_(serverAddr),
-    //messageCallback_(defaultMessageCallback), //TODO
     retry_(false),
     connect_(false)
 {
@@ -81,6 +73,11 @@ bool UdpClient::connect()
     return false;
   }
 
+  LOG_TRACE << "create SOCK_DGRAM fd=" << sockfd;
+
+  sockets::setNonblocking(sockfd);
+
+#if 0
   const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
   socklen_t addrLen = sizeof(remoteAddr);
   int ret = ::connect(sockfd, detail::sockaddr_cast(&remoteAddr), addrLen);
@@ -97,6 +94,7 @@ bool UdpClient::connect()
     ::close(sockfd);
     return false;
   }
+#endif
 
   channel_.reset(new Channel(getLoop(), sockfd));
   channel_->setReadCallback(
@@ -107,7 +105,7 @@ bool UdpClient::connect()
 //      boost::bind(&UdpClient::handleClose, this));
 //  channel_->setErrorCallback(
 //      boost::bind(&UdpClient::handleError, this));
-  //channel_->tie(shared_from_this());
+//  channel_->tie(shared_from_this());
   channel_->enableReading();
   connect_ = true;
   return true;
@@ -154,7 +152,7 @@ void UdpClient::send(const void* data, size_t len)
       string message(static_cast<const char*>(data), len);
       loop_->runInLoop(
           boost::bind(&UdpClient::sendInLoop,
-                      this,     // FIXME
+                      this,
                       message));
     }
   }
@@ -245,7 +243,6 @@ void UdpClient::handleRead(Timestamp receiveTime)
 {
   LOG_TRACE << " handleRead " << receiveTime.toFormattedString();
   loop_->assertInLoopThread();
-  //int savedErrno = 0;
   size_t initialSize = 1472; // The UDP max payload size
   BufferPtr inputBuffer(new Buffer(initialSize));
   struct sockaddr remoteAddr;
@@ -269,7 +266,7 @@ void UdpClient::handleRead(Timestamp receiveTime)
   }
   else
   {
-      //TODO
+    //TODO ERROR process
     LOG_ERROR << "errno=" << savedErrno << " " << strerror(savedErrno) << " recvfrom return " << readn;
     //handleError();
   } 

@@ -15,7 +15,7 @@ void onMessage(const UdpClientPtr& client,
             Timestamp timestamp)
 {
   muduo::string msg = buffer->retrieveAllAsString();
-  LOG_INFO << "recv msg:" << msg;
+  LOG_TRACE << "recv msg:" << msg;
 }
 
 void connect(UdpClient* client)
