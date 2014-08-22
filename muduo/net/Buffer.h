@@ -55,6 +55,16 @@ class Buffer : public muduo::copyable
     assert(prependableBytes() == kCheapPrepend);
   }
 
+  Buffer(size_t initialSize)
+    : buffer_(kCheapPrepend + initialSize),
+      readerIndex_(kCheapPrepend),
+      writerIndex_(kCheapPrepend)
+  {
+    assert(readableBytes() == 0);
+    assert(writableBytes() == initialSize);
+    assert(prependableBytes() == kCheapPrepend);
+  }
+
   // default copy-ctor, dtor and assignment are fine
 
   void swap(Buffer& rhs)
