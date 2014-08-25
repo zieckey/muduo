@@ -130,14 +130,18 @@ void UdpServer::handleRead(Timestamp receiveTime)
   ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
               inputBuffer->writableBytes(), 
               0, &remoteAddr, &addrLen);
-  LOG_TRACE << "recv return, readn=" << readn << " errno=" << strerror(errno);
+  LOG_TRACE << "recv return, readn=" << readn 
+      << " errno=" << strerror(errno) 
+      << InetAddress(*sockets::sockaddr_in_cast(&remoteAddr)).toIpPort();
   if (readn >= 0)
   {
     //received a UDP data package with length = 0 is OK.
     inputBuffer->hasWritten(readn);
     msg->setRemoteAddr(remoteAddr);
     if (messageCallback_) {
-      messageCallback_(shared_from_this(), msg, receiveTime);
+      EventLoop* loop = getNextLoop(msg);
+      //messageCallback_(loop, shared_from_this(), msg, receiveTime);
+      loop->runInLoop(boost::bind(messageCallback_, loop, shared_from_this(), msg, receiveTime));
     }
   }
   else 
@@ -170,5 +174,13 @@ void UdpServer::handleWrite()
   //outputMessagesCache_.clear();
 }
 
+
+EventLoop* UdpServer::getNextLoop(const UdpMessagePtr& msg)
+{
+  const struct sockaddr_in& addr = msg->remoteAddr();
+  uint64_t hash = addr.sin_port;
+  hash = (hash << 32) + addr.sin_addr.s_addr;
+  return threadPool_->getNextLoop(hash);
+}
 
 

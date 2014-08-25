@@ -57,6 +57,17 @@ struct sockaddr* sockets::sockaddr_cast(struct sockaddr_in* addr)
   return static_cast<struct sockaddr*>(implicit_cast<void*>(addr));
 }
 
+const struct sockaddr_in* sockets::sockaddr_in_cast(const struct sockaddr* addr)
+{
+  return static_cast<const struct sockaddr_in*>(implicit_cast<const void*>(addr));
+}
+
+struct sockaddr_in* sockets::sockaddr_in_cast(struct sockaddr* addr)
+{
+  return static_cast<struct sockaddr_in*>(implicit_cast<void*>(addr));
+}
+
+
 bool sockets::setNonblocking(int sockfd) 
 {
   int flags = fcntl(sockfd, F_GETFL, 0);

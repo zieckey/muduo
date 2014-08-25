@@ -8,6 +8,7 @@
 
 #include <muduo/net/EventLoopThreadPool.h>
 
+#include <muduo/base/Logging.h>
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/EventLoopThread.h>
 
