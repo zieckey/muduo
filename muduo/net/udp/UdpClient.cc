@@ -244,22 +244,18 @@ void UdpClient::handleRead(Timestamp receiveTime)
               inputBuffer->writableBytes(), 
               0, &remoteAddr, &addrLen);
 #endif
-  LOG_INFO << "recv return, readn=" << readn << " errno=" << strerror(errno);
-  if (readn > 0)
+  LOG_TRACE << "recv return, readn=" << readn << " errno=" << strerror(errno);
+  if (readn >= 0)
   {
+    //received a UDP data package with length = 0 is OK.
     inputBuffer->hasWritten(readn);
     if (messageCallback_) {
       messageCallback_(shared_from_this(), inputBuffer, receiveTime);
     }
   }
-  else if (readn < 0)
+  else 
   {
     handleError();
-  } 
-  else
-  {
-      //nothing to do
-      //received a UDP data package with length = 0 is OK.
   }
 }
 

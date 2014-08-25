@@ -18,7 +18,6 @@
 
 #include <map>
 #include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace muduo
@@ -29,16 +28,18 @@ namespace net
 class UdpMessage : public boost::noncopyable
 {
  public:
-  UdpMessage(int fd, const struct sockaddr_in& addr, size_t defaultBufferSize = 1472)
-    : sockfd_(fd), buffer_(defaultBufferSize), remoteAddr_(addr)
-  {
-  }
+  UdpMessage(int fd, const struct sockaddr_in& addr, size_t defaultBufferSize = 1472);
+  UdpMessage(int fd, size_t defaultBufferSize = 1472);
 
   const struct sockaddr_in& remoteAddr() const 
   { return remoteAddr_; }
 
   struct sockaddr_in& mutableRemoteAddr() 
   { return remoteAddr_; }
+
+  void setRemoteAddr(const struct sockaddr_in& addr) 
+  { remoteAddr_ = addr; }
+  void setRemoteAddr(const struct sockaddr& addr);
 
   int sockfd() const { return sockfd_; }
 

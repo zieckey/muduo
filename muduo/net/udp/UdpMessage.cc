@@ -16,6 +16,23 @@ namespace muduo
 namespace net
 {
 
+UdpMessage::UdpMessage(int fd, const struct sockaddr_in& addr, size_t defaultBufferSize)
+  : sockfd_(fd), buffer_(defaultBufferSize), remoteAddr_(addr)
+{
+}
+
+UdpMessage::UdpMessage(int fd, size_t defaultBufferSize)
+  : sockfd_(fd), buffer_(defaultBufferSize)
+{
+}
+
+void UdpMessage::setRemoteAddr(const struct sockaddr& addr) 
+{
+  const struct sockaddr_in* in = static_cast<const struct sockaddr_in*>(
+              implicit_cast<const void*>(&addr));
+  remoteAddr_ = *in;
+}
+
 bool UdpMessage::send(const UdpMessage* msg) {
   ssize_t sentn = ::sendto(msg->sockfd(),
               msg->data(), msg->size(), 0, 
