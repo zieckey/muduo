@@ -17,12 +17,17 @@ namespace net
 {
 
 UdpMessage::UdpMessage(int fd, const struct sockaddr_in& addr, size_t defaultBufferSize)
-  : sockfd_(fd), buffer_(defaultBufferSize), remoteAddr_(addr)
+  : sockfd_(fd), buffer_(new Buffer(defaultBufferSize)), remoteAddr_(addr)
 {
 }
 
 UdpMessage::UdpMessage(int fd, size_t defaultBufferSize)
-  : sockfd_(fd), buffer_(defaultBufferSize)
+  : sockfd_(fd), buffer_(new Buffer(defaultBufferSize))
+{
+}
+
+UdpMessage::UdpMessage(int fd, boost::shared_ptr<Buffer>& buf)
+  : sockfd_(fd), buffer_(buf)
 {
 }
 

@@ -124,17 +124,17 @@ void UdpServer::handleRead(Timestamp receiveTime)
   loop_->assertInLoopThread();
   size_t initialSize = 1472; // The UDP max payload size
   UdpMessagePtr msg(new UdpMessage(channel_->fd(), initialSize));
-  Buffer& inputBuffer = msg->buffer();
+  boost::shared_ptr<Buffer>& inputBuffer = msg->buffer();
   struct sockaddr remoteAddr;
   socklen_t addrLen = sizeof(remoteAddr);
-  ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer.beginWrite(), 
-              inputBuffer.writableBytes(), 
+  ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
+              inputBuffer->writableBytes(), 
               0, &remoteAddr, &addrLen);
   LOG_TRACE << "recv return, readn=" << readn << " errno=" << strerror(errno);
   if (readn >= 0)
   {
     //received a UDP data package with length = 0 is OK.
-    inputBuffer.hasWritten(readn);
+    inputBuffer->hasWritten(readn);
     msg->setRemoteAddr(remoteAddr);
     if (messageCallback_) {
       messageCallback_(shared_from_this(), msg, receiveTime);

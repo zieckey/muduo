@@ -30,6 +30,7 @@ class UdpMessage : public boost::noncopyable
  public:
   UdpMessage(int fd, const struct sockaddr_in& addr, size_t defaultBufferSize = 1472);
   UdpMessage(int fd, size_t defaultBufferSize = 1472);
+  UdpMessage(int fd, boost::shared_ptr<Buffer>& buf);
 
   const struct sockaddr_in& remoteAddr() const 
   { return remoteAddr_; }
@@ -43,7 +44,7 @@ class UdpMessage : public boost::noncopyable
 
   int sockfd() const { return sockfd_; }
 
-  Buffer& buffer() 
+  boost::shared_ptr<Buffer>& buffer()
   { return buffer_; }
 
   static bool send(const UdpMessage* msg);
@@ -51,14 +52,14 @@ class UdpMessage : public boost::noncopyable
   /// helper method
  public:
   const char* data() const 
-  { return buffer_.peek(); }
+  { return buffer_->peek(); }
   size_t size() const 
-  { return buffer_.readableBytes(); }
+  { return buffer_->readableBytes(); }
   char* beginWrite()
-  { return buffer_.beginWrite(); }
+  { return buffer_->beginWrite(); }
  private:
   int sockfd_;
-  Buffer buffer_;
+  boost::shared_ptr<Buffer> buffer_;
   struct sockaddr_in remoteAddr_;
 };
 
