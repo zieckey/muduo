@@ -24,25 +24,6 @@
 using namespace muduo;
 using namespace muduo::net;
 
-namespace muduo
-{
-namespace net
-{
-namespace detail
-{
-typedef struct sockaddr SA;
-const SA* sockaddr_cast(const struct sockaddr_in* addr)
-{
-  return static_cast<const SA*>(implicit_cast<const void*>(addr));
-}
-SA* sockaddr_cast(struct sockaddr_in* addr)
-{
-  return static_cast<SA*>(implicit_cast<void*>(addr));
-}
-}
-}
-}
-
 UdpClient::UdpClient(EventLoop* loop,
                      const InetAddress& serverAddr,
                      const string& name)
@@ -81,7 +62,7 @@ bool UdpClient::connect()
 #ifdef _DO_UDP_CONNECT
   const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
   socklen_t addrLen = sizeof(remoteAddr);
-  int ret = ::connect(sockfd, detail::sockaddr_cast(&remoteAddr), addrLen);
+  int ret = ::connect(sockfd, sockets::sockaddr_cast(&remoteAddr), addrLen);
 
   if (ret != 0)
   {
@@ -222,7 +203,7 @@ void UdpClient::sendInLoop(const void* data, size_t len)
   const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
   socklen_t addrLen = sizeof(remoteAddr);
   nwrote = ::sendto(channel_->fd(), data, len, 0, 
-              detail::sockaddr_cast(&remoteAddr), addrLen);
+              sockets::sockaddr_cast(&remoteAddr), addrLen);
 #endif
   if (nwrote < 0)
   {
