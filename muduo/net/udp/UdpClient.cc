@@ -19,6 +19,8 @@
 #include <stdio.h>  // snprintf
 #include <errno.h> 
 
+//#define _DO_UDP_CONNECT
+
 using namespace muduo;
 using namespace muduo::net;
 
@@ -76,7 +78,7 @@ bool UdpClient::connect()
 
   sockets::setNonblocking(sockfd);
 
-#if 0
+#ifdef _DO_UDP_CONNECT
   const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
   socklen_t addrLen = sizeof(remoteAddr);
   int ret = ::connect(sockfd, detail::sockaddr_cast(&remoteAddr), addrLen);
@@ -214,10 +216,14 @@ void UdpClient::sendInLoop(const void* data, size_t len)
   }
 
   //send udp data directly
+#ifdef _DO_UDP_CONNECT
+  nwrote = ::send(channel_->fd(), data, len, 0);
+#else
   const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
   socklen_t addrLen = sizeof(remoteAddr);
-  nwrote = ::sendto(channel_->fd(), data, len, 0,
+  nwrote = ::sendto(channel_->fd(), data, len, 0, 
               detail::sockaddr_cast(&remoteAddr), addrLen);
+#endif
   if (nwrote < 0)
   {
     nwrote = 0;
@@ -244,15 +250,20 @@ void UdpClient::sendInLoop(const void* data, size_t len)
 
 void UdpClient::handleRead(Timestamp receiveTime)
 {
-  LOG_TRACE << " handleRead " << receiveTime.toFormattedString();
+  LOG_TRACE << " UdpClient " << receiveTime.toFormattedString();
   loop_->assertInLoopThread();
   size_t initialSize = 1472; // The UDP max payload size
   BufferPtr inputBuffer(new Buffer(initialSize));
+#ifdef _DO_UDP_CONNECT
+  ssize_t readn = ::recv(channel_->fd(), inputBuffer->beginWrite(), inputBuffer->writableBytes(), 0);
+#else
   struct sockaddr remoteAddr;
   socklen_t addrLen = sizeof(remoteAddr);
   ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
-      inputBuffer->writableBytes(),
-      0, &remoteAddr, &addrLen);
+              inputBuffer->writableBytes(), 
+              0, &remoteAddr, &addrLen);
+#endif
+  LOG_INFO << "recv return, readn=" << readn << " errno=" << strerror(errno);
   if (readn > 0)
   {
     inputBuffer->hasWritten(readn);

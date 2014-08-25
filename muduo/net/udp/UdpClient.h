@@ -41,7 +41,6 @@ class UdpClient : boost::noncopyable,
                               Timestamp)> UdpMessageCallback;
   typedef boost::function<void (const UdpClientPtr&)> UdpWriteCompleteCallback;
  public:
-  // UdpClient(EventLoop* loop, const string& host, uint16_t port);
   UdpClient(EventLoop* loop,
             const InetAddress& serverAddr,
             const string& name);
