@@ -44,6 +44,9 @@ class EventLoopThreadPool : boost::noncopyable
   /// with the same hash code, it will always return the same EventLoop
   EventLoop* getNextLoop(uint64_t hashCode);
 
+  bool started() const 
+  { return started_; }
+
  private:
 
   EventLoop* baseLoop_;
