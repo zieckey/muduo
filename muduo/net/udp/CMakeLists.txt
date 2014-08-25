@@ -1,5 +1,7 @@
 set(udp_SRCS
   UdpClient.cc
+  UdpMessage.cc
+  UdpServer.cc
   )
 
 add_library(muduo_net_udp ${udp_SRCS})

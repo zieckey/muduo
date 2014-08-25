@@ -37,7 +37,15 @@ class EventLoopThreadPool : boost::noncopyable
   ~EventLoopThreadPool();
   void setThreadNum(int numThreads) { numThreads_ = numThreads; }
   void start(const ThreadInitCallback& cb = ThreadInitCallback());
+
+  /// round-robin
   EventLoop* getNextLoop();
+
+  /// with the same hash code, it will always return the same EventLoop
+  EventLoop* getNextLoop(uint64_t hashCode);
+
+  bool started() const 
+  { return started_; }
 
  private:
 

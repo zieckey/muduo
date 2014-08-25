@@ -11,13 +11,13 @@
 #ifndef MUDUO_NET_UDPCLIENT_H
 #define MUDUO_NET_UDPCLIENT_H
 
-#include <boost/noncopyable.hpp>
 #include <boost/any.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
-#include <muduo/base/Mutex.h>
 #include <muduo/base/Timestamp.h>
+
 #include <muduo/net/Channel.h>
 #include <muduo/net/InetAddress.h>
 #include <muduo/net/Buffer.h>
@@ -32,7 +32,7 @@ class UdpClient;
 typedef boost::shared_ptr<UdpClient> UdpClientPtr;
 typedef boost::shared_ptr<Buffer> BufferPtr;
 
-class UdpClient : boost::noncopyable, 
+class UdpClient : public boost::noncopyable, 
                   public boost::enable_shared_from_this<UdpClient>
 {
  public:

@@ -4,50 +4,58 @@
 // Use of this source code is governed by a BSD-style license
 // that can be found in the License file.
 
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
+// Author: zieckey (zieckey at gmail dot com)
 //
 // This is a public header file, it must only include public header files.
 
-#ifndef MUDUO_NET_TCPSERVER_H
-#define MUDUO_NET_TCPSERVER_H
+#ifndef MUDUO_NET_UDPSERVER_H
+#define MUDUO_NET_UDPSERVER_H
 
 #include <muduo/base/Types.h>
-#include <muduo/net/TcpConnection.h>
 
 #include <map>
+#include <boost/any.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+
+#include <muduo/base/Timestamp.h>
+
+#include <muduo/net/udp/UdpMessage.h>
+#include <muduo/net/Callbacks.h>
+#include <muduo/net/Channel.h>
+#include <muduo/net/InetAddress.h>
 
 namespace muduo
 {
 namespace net
 {
 
-class Acceptor;
 class EventLoop;
 class EventLoopThreadPool;
 
+class UdpServer;
+typedef boost::shared_ptr<UdpServer> UdpServerPtr;
+
 ///
-/// TCP server, supports single-threaded and thread-pool models.
+/// UDP server, supports single-threaded and thread-pool models.
 ///
 /// This is an interface class, so don't expose too much details.
-class TcpServer : boost::noncopyable
+class UdpServer : public boost::noncopyable, 
+                  public boost::enable_shared_from_this<UdpServer>
 {
  public:
+  typedef boost::function<void (const UdpServerPtr&, 
+                                UdpMessagePtr&,
+                                Timestamp)> UdpMessageCallback;
   typedef boost::function<void(EventLoop*)> ThreadInitCallback;
-  enum Option
-  {
-    kNoReusePort,
-    kReusePort,
-  };
 
-  //TcpServer(EventLoop* loop, const InetAddress& listenAddr);
-  TcpServer(EventLoop* loop,
+  //UdpServer(EventLoop* loop, const InetAddress& listenAddr);
+  UdpServer(EventLoop* loop,
             const InetAddress& listenAddr,
-            const string& nameArg,
-            Option option = kNoReusePort);
-  ~TcpServer();  // force out-line dtor, for scoped_ptr members.
+            const string& nameArg);
+  ~UdpServer();  // force out-line dtor, for scoped_ptr members.
 
   const string& hostport() const { return hostport_; }
   const string& name() const { return name_; }
@@ -66,6 +74,8 @@ class TcpServer : boost::noncopyable
   void setThreadNum(int numThreads);
   void setThreadInitCallback(const ThreadInitCallback& cb)
   { threadInitCallback_ = cb; }
+  void setThreadPool(boost::shared_ptr<EventLoopThreadPool> pool)
+  { threadPool_ = pool; }
 
   /// Starts the server if it's not listenning.
   ///
@@ -73,14 +83,16 @@ class TcpServer : boost::noncopyable
   /// Thread safe.
   void start();
 
+  void stop();
+
   /// Set connection callback.
   /// Not thread safe.
-  void setConnectionCallback(const ConnectionCallback& cb)
-  { connectionCallback_ = cb; }
+//  void setConnectionCallback(const ConnectionCallback& cb)
+//  { connectionCallback_ = cb; }
 
   /// Set message callback.
   /// Not thread safe.
-  void setMessageCallback(const MessageCallback& cb)
+  void setMessageCallback(const UdpMessageCallback& cb)
   { messageCallback_ = cb; }
 
   /// Set write complete callback.
@@ -91,29 +103,46 @@ class TcpServer : boost::noncopyable
   boost::shared_ptr<EventLoopThreadPool> threadPool() const 
   { return threadPool_; }
 
+  void setContext(const boost::any& context)
+  { context_ = context; }
+
+  const boost::any& getContext() const
+  { return context_; }
+
+  boost::any* getMutableContext()
+  { return &context_; }
+
+
+ private:
+  void stopInLoop();
+  void handleRead(Timestamp receiveTime);
+  void handleError();
+  void handleWrite();
  private:
   /// Not thread safe, but in loop
-  void newConnection(int sockfd, const InetAddress& peerAddr);
+  //void newConnection(int sockfd, const InetAddress& peerAddr);
   /// Thread safe.
-  void removeConnection(const TcpConnectionPtr& conn);
+  //void removeConnection(const TcpConnectionPtr& conn);
   /// Not thread safe, but in loop
-  void removeConnectionInLoop(const TcpConnectionPtr& conn);
-
-  typedef std::map<string, TcpConnectionPtr> ConnectionMap;
+  //void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
   EventLoop* loop_;  // the acceptor loop
+  InetAddress listenAddr_;
   const string hostport_;
   const string name_;
-  boost::scoped_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
+  //boost::scoped_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
   boost::shared_ptr<EventLoopThreadPool> threadPool_;
-  ConnectionCallback connectionCallback_;
-  MessageCallback messageCallback_;
+  //ConnectionCallback connectionCallback_;
+  UdpMessageCallback messageCallback_;
   WriteCompleteCallback writeCompleteCallback_;
   ThreadInitCallback threadInitCallback_;
   bool started_;
   // always in loop thread
-  int nextConnId_;
-  ConnectionMap connections_;
+  //int nextConnId_;
+  //ConnectionMap connections_;
+  
+  boost::scoped_ptr<Channel> channel_;
+  boost::any context_;
 };
 
 }

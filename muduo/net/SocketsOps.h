@@ -44,6 +44,8 @@ void fromIpPort(const char* ip, uint16_t port,
 
 int getSocketError(int sockfd);
 
+const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr);
+struct sockaddr* sockaddr_cast(struct sockaddr_in* addr);
 
 bool setNonblocking(int sockfd);
 
