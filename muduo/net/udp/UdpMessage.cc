@@ -33,8 +33,7 @@ UdpMessage::UdpMessage(int fd, boost::shared_ptr<Buffer>& buf)
 
 void UdpMessage::setRemoteAddr(const struct sockaddr& addr) 
 {
-  const struct sockaddr_in* in = static_cast<const struct sockaddr_in*>(
-              implicit_cast<const void*>(&addr));
+  const struct sockaddr_in* in = sockets::sockaddr_in_cast(&addr);
   remoteAddr_ = *in;
 }
 

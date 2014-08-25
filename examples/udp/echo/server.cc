@@ -10,13 +10,15 @@
 using namespace muduo;
 using namespace muduo::net;
 
-void onMessage(const UdpServerPtr& server,
+void onMessage(
+            muduo::net::EventLoop* loop,
+            const UdpServerPtr& server,
             UdpMessagePtr& udpMsg,
             Timestamp timestamp)
 {
   muduo::net::UdpMessage::send(udpMsg.get());
   muduo::string msg(udpMsg->data(), udpMsg->size());
-  LOG_INFO << "recv msg:" << msg;
+  LOG_INFO << "recv msg:" << msg << " loop tid=" << muduo::CurrentThread::tid();
 }
 
 int main(int argc, char* argv[])
@@ -31,6 +33,7 @@ int main(int argc, char* argv[])
   muduo::net::InetAddress remoteAddr(host, port);
   muduo::net::UdpServerPtr server(new muduo::net::UdpServer(&loop, remoteAddr, "echo"));
   server->setMessageCallback(&onMessage);
+  server->setThreadNum(10);
   server->start();
   loop.loop();
   return 0;

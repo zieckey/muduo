@@ -46,7 +46,8 @@ class UdpServer : public boost::noncopyable,
                   public boost::enable_shared_from_this<UdpServer>
 {
  public:
-  typedef boost::function<void (const UdpServerPtr&, 
+  typedef boost::function<void (EventLoop* loop,
+                                const UdpServerPtr&, 
                                 UdpMessagePtr&,
                                 Timestamp)> UdpMessageCallback;
   typedef boost::function<void(EventLoop*)> ThreadInitCallback;
@@ -118,6 +119,7 @@ class UdpServer : public boost::noncopyable,
   void handleRead(Timestamp receiveTime);
   void handleError();
   void handleWrite();
+  EventLoop* getNextLoop(const UdpMessagePtr& msg);
  private:
   /// Not thread safe, but in loop
   //void newConnection(int sockfd, const InetAddress& peerAddr);
