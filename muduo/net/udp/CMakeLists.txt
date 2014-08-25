@@ -10,6 +10,8 @@ target_link_libraries(muduo_net_udp muduo_net)
 install(TARGETS muduo_net_udp DESTINATION lib)
 set(HEADERS
   UdpClient.h
+  UdpMessage.h
+  UdpServer.h
   )
 install(FILES ${HEADERS} DESTINATION include/muduo/net/udp)
 
