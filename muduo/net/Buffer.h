@@ -45,17 +45,17 @@ class Buffer : public muduo::copyable
   static const size_t kCheapPrepend = 8;
   static const size_t kInitialSize = 1024;
 
-  Buffer()
-    : buffer_(kCheapPrepend + kInitialSize),
-      readerIndex_(kCheapPrepend),
-      writerIndex_(kCheapPrepend)
-  {
-    assert(readableBytes() == 0);
-    assert(writableBytes() == kInitialSize);
-    assert(prependableBytes() == kCheapPrepend);
-  }
+//  Buffer()
+//    : buffer_(kCheapPrepend + kInitialSize),
+//      readerIndex_(kCheapPrepend),
+//      writerIndex_(kCheapPrepend)
+//  {
+//    assert(readableBytes() == 0);
+//    assert(writableBytes() == kInitialSize);
+//    assert(prependableBytes() == kCheapPrepend);
+//  }
 
-  Buffer(size_t initialSize)
+  Buffer(size_t initialSize = kInitialSize)
     : buffer_(kCheapPrepend + initialSize),
       readerIndex_(kCheapPrepend),
       writerIndex_(kCheapPrepend)

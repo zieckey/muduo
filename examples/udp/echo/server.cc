@@ -24,7 +24,7 @@ void onMessage(
 int main(int argc, char* argv[])
 {
   if (argc != 2) {
-    LOG_ERROR << "usage : " << argv[0] << " host port";
+    LOG_ERROR << "usage : " << argv[0] << " port";
     return 0;
   }
   const char* host = "0.0.0.0";
