@@ -122,16 +122,15 @@ void UdpServer::handleRead(Timestamp receiveTime)
 {
   LOG_TRACE << " UdpServer " << receiveTime.toFormattedString();
   loop_->assertInLoopThread();
-  size_t initialSize = 1472; // The UDP max payload size
+  const size_t initialSize = 1472; // The UDP max payload size
   UdpMessagePtr msg(new UdpMessage(channel_->fd(), initialSize));
   boost::shared_ptr<Buffer>& inputBuffer = msg->buffer();
   struct sockaddr remoteAddr;
   socklen_t addrLen = sizeof(remoteAddr);
   ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
-              inputBuffer->writableBytes(), 
-              0, &remoteAddr, &addrLen);
+              inputBuffer->writableBytes(), 0, &remoteAddr, &addrLen);
   LOG_TRACE << "recv return, readn=" << readn 
-      << " errno=" << strerror(errno) 
+      << " errno=" << strerror(errno) << " "
       << InetAddress(*sockets::sockaddr_in_cast(&remoteAddr)).toIpPort();
   if (readn >= 0)
   {
@@ -139,8 +138,8 @@ void UdpServer::handleRead(Timestamp receiveTime)
     inputBuffer->hasWritten(readn);
     msg->setRemoteAddr(remoteAddr);
     if (messageCallback_) {
+      // Get EventLoop associated with a worker thread
       EventLoop* loop = getNextLoop(msg);
-      //messageCallback_(loop, shared_from_this(), msg, receiveTime);
       loop->runInLoop(boost::bind(messageCallback_, loop, shared_from_this(), msg, receiveTime));
     }
   }
@@ -160,6 +159,8 @@ void UdpServer::handleError()
 void UdpServer::handleWrite()
 {
   LOG_INFO << "UdpServer::handleWrite";
+  //TODO Add code
+  
   //LOG_INFO << "UdpServer::handleWrite outputMessages_.size=" << outputMessages_.size();
   //if (outputMessages_.empty()) {
   //  return;

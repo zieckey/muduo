@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
   muduo::net::InetAddress remoteAddr(host, port);
   muduo::net::UdpServerPtr server(new muduo::net::UdpServer(&loop, remoteAddr, "echo"));
   server->setMessageCallback(&onMessage);
-  server->setThreadNum(10);
+  server->setThreadNum(1);
   server->start();
   loop.loop();
   return 0;

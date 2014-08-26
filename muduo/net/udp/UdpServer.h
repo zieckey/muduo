@@ -128,20 +128,16 @@ class UdpServer : public boost::noncopyable,
   /// Not thread safe, but in loop
   //void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
-  EventLoop* loop_;  // the acceptor loop
+  EventLoop* loop_;  // the receiving loop
   InetAddress listenAddr_;
   const string hostport_;
   const string name_;
-  //boost::scoped_ptr<Acceptor> acceptor_; // avoid revealing Acceptor
   boost::shared_ptr<EventLoopThreadPool> threadPool_;
-  //ConnectionCallback connectionCallback_;
   UdpMessageCallback messageCallback_;
   WriteCompleteCallback writeCompleteCallback_;
   ThreadInitCallback threadInitCallback_;
   bool started_;
-  // always in loop thread
   //int nextConnId_;
-  //ConnectionMap connections_;
   
   boost::scoped_ptr<Channel> channel_;
   boost::any context_;
