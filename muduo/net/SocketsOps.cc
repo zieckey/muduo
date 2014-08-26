@@ -28,6 +28,7 @@ namespace
 typedef struct sockaddr SA;
 
 
+#if VALGRIND
 void setNonBlockAndCloseOnExec(int sockfd)
 {
   // non-block
@@ -44,6 +45,7 @@ void setNonBlockAndCloseOnExec(int sockfd)
 
   (void)ret;
 }
+#endif
 
 }
 
@@ -86,7 +88,6 @@ bool sockets::setNonblocking(int sockfd)
 
 int sockets::createNonblockingOrDie()
 {
-  // socket
 #if VALGRIND
   int sockfd = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (sockfd < 0)
@@ -206,10 +207,12 @@ void sockets::shutdownWrite(int sockfd)
 void sockets::toIpPort(char* buf, size_t size,
                        const struct sockaddr_in& addr)
 {
-  char host[INET_ADDRSTRLEN] = "INVALID";
-  toIp(host, sizeof host, addr);
+  assert(size >= INET_ADDRSTRLEN);
+  ::inet_ntop(AF_INET, &addr.sin_addr, buf, static_cast<socklen_t>(size));
+  size_t end = ::strlen(buf);
   uint16_t port = sockets::networkToHost16(addr.sin_port);
-  snprintf(buf, size, "%s:%u", host, port);
+  assert(size > end);
+  snprintf(buf+end, size-end, ":%u", port);
 }
 
 void sockets::toIp(char* buf, size_t size,
@@ -220,7 +223,7 @@ void sockets::toIp(char* buf, size_t size,
 }
 
 void sockets::fromIpPort(const char* ip, uint16_t port,
-                           struct sockaddr_in* addr)
+                         struct sockaddr_in* addr)
 {
   addr->sin_family = AF_INET;
   addr->sin_port = hostToNetwork16(port);

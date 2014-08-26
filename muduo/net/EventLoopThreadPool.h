@@ -11,9 +11,6 @@
 #ifndef MUDUO_NET_EVENTLOOPTHREADPOOL_H
 #define MUDUO_NET_EVENTLOOPTHREADPOOL_H
 
-#include <muduo/base/Condition.h>
-#include <muduo/base/Mutex.h>
-
 #include <vector>
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
@@ -38,11 +35,16 @@ class EventLoopThreadPool : boost::noncopyable
   void setThreadNum(int numThreads) { numThreads_ = numThreads; }
   void start(const ThreadInitCallback& cb = ThreadInitCallback());
 
+  // valid after calling start()
+  
   /// round-robin
   EventLoop* getNextLoop();
 
   /// with the same hash code, it will always return the same EventLoop
   EventLoop* getNextLoop(uint64_t hashCode);
+
+  // valid after calling start()
+  std::vector<EventLoop*> getAllLoops();
 
   bool started() const 
   { return started_; }
