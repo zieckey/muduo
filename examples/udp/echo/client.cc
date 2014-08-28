@@ -24,6 +24,13 @@ void connect(UdpClient* client)
   client->setMessageCallback(&onMessage);
 }
 
+void quit(UdpClient* client, muduo::net::TimerId sendTimerId, muduo::net::EventLoop* loop)
+{
+  client->close();
+  loop->cancel(sendTimerId);
+  loop->quit();
+}
+
 void onTimer(UdpClient* client)
 {
     client->send("123");
@@ -40,8 +47,9 @@ int main(int argc, char* argv[])
   muduo::net::EventLoop loop;
   muduo::net::InetAddress remoteAddr(host, port);
   muduo::net::UdpClientPtr client(new muduo::net::UdpClient(&loop, remoteAddr, "echo"));
-  loop.runEvery(1.0, boost::bind(&onTimer, client.get()));
+  muduo::net::TimerId sendTimerId = loop.runEvery(1.0, boost::bind(&onTimer, client.get()));
   loop.runAfter(0.1, boost::bind(&connect, client.get()));
+  loop.runAfter(5, boost::bind(&quit, client.get(), sendTimerId, &loop));
   loop.loop();
 }
 

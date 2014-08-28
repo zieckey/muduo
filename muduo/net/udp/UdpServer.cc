@@ -138,7 +138,7 @@ void UdpServer::handleRead(Timestamp receiveTime)
     inputBuffer->hasWritten(readn);
     msg->setRemoteAddr(remoteAddr);
     if (messageCallback_) {
-      // Get EventLoop associated with a worker thread
+      // Get an EventLoop associated with a worker thread
       EventLoop* loop = getNextLoop(msg);
       loop->runInLoop(boost::bind(messageCallback_, loop, shared_from_this(), msg, receiveTime));
     }
