@@ -1,5 +1,6 @@
 git co build
-cd ..
+WORKDIR=`pwd`
+cd ../..
 TARGET=home/s/safe
 rm -rf $TARGET
 mkdir $TARGET/lib -p
@@ -12,3 +13,5 @@ find $TARGET -name *.cc | xargs rm -rf
 find $TARGET -name *.txt | xargs rm -rf
 
 tar zcvf muduo.tar.gz home
+
+cp -rf home $WORKDIR/muduo/src/

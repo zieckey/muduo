@@ -1,0 +1,136 @@
+#!/bin/bash
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+IsDeving="true"
+
+WORKDIR=$PWD
+if [ $# -lt 1 ]
+then
+	echo "没有要打包的程序"
+	exit 1
+fi
+
+PROJ=$1
+LogPath="$PWD/"
+[ -d "${LogPath}${PROJ}" ] || mkdir -p ${LogPath}${PROJ}
+LogPrefix="${PROJ}"
+Log="${LogPrefix}.log"
+DebugLogPrefix="${PROJ}/${LogPrefix}_debug"
+DebugLog="${DebugLogPrefix}.log"
+
+
+function Report
+{
+	echo -e "[`date +\"%F %H:%M:%S\"`] $1" | tee -a ${LogPath}${Log}
+	if [ $# -eq 2 ]
+	then
+		Final
+		exit 1
+	fi
+}
+
+function ReportInfo
+{
+	Report "[INFO] $1"
+}
+
+function ReportWarn
+{
+	Report "[WARNING] $1" 1
+}
+
+function Prepare
+{
+	[ -d ${LogPath} ] || mkdir -p ${LogPath}
+	echo "-----------------------------------------`date`-----------------------------------------" >> ${LogPath}${DebugLog}
+	#exec 1>> ${LogPath}${DebugLog}
+	exec 2>> ${LogPath}${DebugLog}
+	trap 'ReportWarn "root interupt the shell"' 2
+	if [ ! -z "${IsDeving}" ]
+	then
+		echo "Deving-Debug" >> ${LogPath}${DebugLog}
+		set -x
+	fi
+}
+
+function Final
+{
+	[ -z "${IsDeving}" ] && set +x
+}
+
+Prepare
+
+SPECFILE=${PROJ}/${PROJ}.spec
+
+if [ ! -s ${WORKDIR}/${PROJ}/${PROJ}.spec ]
+then
+	ReportWarn "没有spec文件：${WORKDIR}/${PROJ}/${PROJ}.spec"
+fi
+
+if [ -s ${WORKDIR}/${PROJ}/VISION ]
+then
+	VERSION=`cat ${WORKDIR}/${PROJ}/VISION`
+	ReportInfo "使用VISION文件版本${VERSION}"
+else
+	VERSION=0.1
+	ReportInfo "使用默认版本0.1"
+fi
+
+if [ $# -eq 2 ]
+then
+	VERSION=$2
+	ReportInfo "使用自定义版本${VERSION}"
+fi
+
+echo ${VERSION} > ${WORKDIR}/${PROJ}/VISION
+
+# check build serial number
+BUILDSN="${WORKDIR}/${PROJ}/BUILDSN"
+BUILD=`date '+%y%m%d000'`
+if [ -s ${BUILDSN} ]
+then
+	BUILT=`cat ${BUILDSN}`
+	[ ${BUILD} -gt ${BUILT} ] || BUILD=`expr ${BUILT} + 1`
+fi
+ReportInfo "使用release号${BUILD}"
+echo ${BUILD} > ${BUILDSN}
+
+MACHINE=`uname -m`
+
+RELEASE="${BUILD}.el$(cat /etc/redhat-release|cut -d " " -f 3|cut -d "." -f 1)"
+sed -i "s/^Name:.*$/Name: "${PROJ}"/" ${SPECFILE}
+sed -i "s/^Release:.*$/Release: "${RELEASE}"/" ${SPECFILE}
+sed -i "s/^Version:.*$/Version: "${VERSION}"/" ${SPECFILE}
+
+TMP_DIR="${WORKDIR}/rpmbuild"
+mkdir -p ${TMP_DIR}
+mkdir -p ${TMP_DIR}/TMP
+mkdir -p ${TMP_DIR}/BUILD
+mkdir -p ${TMP_DIR}/RPMS
+mkdir -p ${TMP_DIR}/SOURCES
+mkdir -p ${TMP_DIR}/SRPMS
+mkdir -p ${WORKDIR}/RPMS
+
+BUILDDIR="${TMP_DIR}/BUILDROOT/${PROJ}-${VERSION}-${RELEASE}.${MACHINE}"
+
+mkdir -p ${BUILDDIR}
+rm -rf ${BUILDDIR}/*
+scp -r ${WORKDIR}/${PROJ}/src/* ${BUILDDIR}/
+
+rpmbuild --define "_topdir ${TMP_DIR}" \
+ --define "_tmppath ${TMP_DIR}/TMP" \
+ --define "_rpmdir ${WORKDIR}/RPMS" \
+ --define "_sourcedir ${TMP_DIR}/SOURCES" \
+ --define "_srcrpmdir ${TMP_DIR}/SRPMS" \
+ --define "_builddir  ${TMP_DIR}/BUILD" \
+ -ba ${SPECFILE}
+
+RPMBUILDERR=$?
+if [ ${RPMBUILDERR} -ne 0 ]
+then
+	ReportWarn "打包失败"
+else
+	scp ${WORKDIR}/RPMS/${MACHINE}/${PROJ}-${VERSION}-${RELEASE}.${MACHINE}.rpm ${WORKDIR}/${PROJ}/
+	scp ${WORKDIR}/RPMS/${MACHINE}/${PROJ}-${VERSION}-${RELEASE}.${MACHINE}.rpm /home/cloud/rpm/
+	rm -rf ${TMP_DIR}
+	ReportInfo "打包成功结束"
+fi
