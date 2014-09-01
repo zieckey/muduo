@@ -49,7 +49,7 @@ bool UdpClient::connect()
   LOG_INFO << "UdpClient::connect[" << name_ << "] - connecting to "
            << serverAddr_.toIpPort();
   assert(!connect_);
-  int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  int sockfd = ::socket(AF_INET, SOCK_DGRAM, 0);
   assert(sockfd > 0);
   if (sockfd < 0) {
     return false;
