@@ -156,13 +156,15 @@ void UdpServer::handleRead(Timestamp receiveTime)
 
 void UdpServer::handleError()
 {
-  int err = sockets::getSocketError(channel_->fd());
-  if (err == EAGAIN || err == EWOULDBLOCK) {
+  int savedErrno = errno;
+  if (savedErrno == EAGAIN || savedErrno == EWOULDBLOCK) {
     LOG_DEBUG << "UdpServer::handleError [" << name_
-        << "] - EAGAIN or EWOULDBLOCK ERROR, errno=" << err << " " << strerror_tl(err);
+        << "] - EAGAIN or EWOULDBLOCK ERROR, errno=" << savedErrno << " " << strerror_tl(savedErrno);
   } else {
+    int err = sockets::getSocketError(channel_->fd());
     LOG_ERROR << "UdpServer::handleError [" << name_
-        << "] - SO_ERROR = " << err << " " << strerror_tl(err);
+        << "] - SO_ERROR=" << err << " " << strerror_tl(err) 
+        << " errno=" << savedErrno << " " << strerror_tl(savedErrno);;
   }
 }
 
