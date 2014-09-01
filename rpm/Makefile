@@ -6,6 +6,7 @@ all :
 	cp muduo.spec muduo
 	rm -rf ../../build/release
 	(cd .. ; ./build.sh)
+	(cd .. ; export BUILD_TYPE=debug ; sh build.sh)
 	./tar.sh
 	./buildrpm muduo $(VERSION)
 
