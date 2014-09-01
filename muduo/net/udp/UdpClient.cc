@@ -111,11 +111,11 @@ void UdpClient::closeInLoop()
   loop_->assertInLoopThread();
   connect_ = false;
   if (channel_.get()) {
-    if (channel_->fd() > 0) {
-      ::close(channel_->fd());
-    }
     channel_->disableAll();
     channel_->remove();
+    if (channel_->fd() >= 0) {
+      ::close(channel_->fd());
+    }
     channel_.reset();
   }
 }
