@@ -193,7 +193,7 @@ EventLoop* UdpServer::getNextLoop(const UdpMessagePtr& msg)
   const struct sockaddr_in& addr = msg->remoteAddr();
   uint64_t hash = addr.sin_port;
   hash = (hash << 32) + addr.sin_addr.s_addr;
-  return threadPool_->getNextLoop(hash);
+  return threadPool_->getLoopForHash(hash);
 }
 
 
