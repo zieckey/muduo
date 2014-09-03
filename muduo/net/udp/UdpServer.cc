@@ -123,37 +123,49 @@ void UdpServer::handleRead(Timestamp receiveTime)
   LOG_TRACE << " UdpServer " << receiveTime.toFormattedString();
   loop_->assertInLoopThread();
   const size_t initialSize = 1472; // The UDP max payload size
-  UdpMessagePtr msg(new UdpMessage(channel_->fd(), initialSize));
-  boost::shared_ptr<Buffer>& inputBuffer = msg->buffer();
-  struct sockaddr remoteAddr;
-  socklen_t addrLen = sizeof(remoteAddr);
-  ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(), 
-              inputBuffer->writableBytes(), 0, &remoteAddr, &addrLen);
-  LOG_TRACE << "recv return, readn=" << readn 
-      << " errno=" << strerror(errno) << " "
-      << InetAddress(*sockets::sockaddr_in_cast(&remoteAddr)).toIpPort();
-  if (readn >= 0)
+  for (;;) 
   {
-    //received a UDP data package with length = 0 is OK.
-    inputBuffer->hasWritten(readn);
-    msg->setRemoteAddr(remoteAddr);
-    if (messageCallback_) {
-      // Get an EventLoop associated with a worker thread
-      EventLoop* loop = getNextLoop(msg);
-      loop->runInLoop(boost::bind(messageCallback_, loop, shared_from_this(), msg, receiveTime));
+    UdpMessagePtr msg(new UdpMessage(channel_->fd(), initialSize));
+    boost::shared_ptr<Buffer>& inputBuffer = msg->buffer();
+    struct sockaddr remoteAddr;
+    socklen_t addrLen = sizeof(remoteAddr);
+    ssize_t readn = ::recvfrom(channel_->fd(), inputBuffer->beginWrite(),
+                inputBuffer->writableBytes(), 0, &remoteAddr, &addrLen);
+    LOG_TRACE << "recv return, readn=" << readn
+        << " errno=" << strerror(errno) << " "
+        << InetAddress(*sockets::sockaddr_in_cast(&remoteAddr)).toIpPort();
+    if (readn >= 0)
+    {
+      //received a UDP data package with length = 0 is OK.
+      inputBuffer->hasWritten(readn);
+      msg->setRemoteAddr(remoteAddr);
+      if (messageCallback_) 
+      {
+        // Get an EventLoop associated with a worker thread
+        EventLoop* loop = getNextLoop(msg);
+        loop->runInLoop(boost::bind(messageCallback_, loop, shared_from_this(), msg, receiveTime));
+      }
     }
-  }
-  else 
-  {
-    handleError();
+    else
+    {
+      handleError();
+      break;
+    }
   }
 }
 
 void UdpServer::handleError()
 {
-  int err = sockets::getSocketError(channel_->fd());
-  LOG_ERROR << "UdpServer::handleError [" << name_
-        << "] - SO_ERROR = " << err << " " << strerror_tl(err);
+  int savedErrno = errno;
+  if (savedErrno == EAGAIN || savedErrno == EWOULDBLOCK) {
+    LOG_DEBUG << "UdpServer::handleError [" << name_
+        << "] - EAGAIN or EWOULDBLOCK ERROR, errno=" << savedErrno << " " << strerror_tl(savedErrno);
+  } else {
+    int err = sockets::getSocketError(channel_->fd());
+    LOG_ERROR << "UdpServer::handleError [" << name_
+        << "] - SO_ERROR=" << err << " " << strerror_tl(err) 
+        << " errno=" << savedErrno << " " << strerror_tl(savedErrno);;
+  }
 }
 
 void UdpServer::handleWrite()
@@ -181,7 +193,7 @@ EventLoop* UdpServer::getNextLoop(const UdpMessagePtr& msg)
   const struct sockaddr_in& addr = msg->remoteAddr();
   uint64_t hash = addr.sin_port;
   hash = (hash << 32) + addr.sin_addr.s_addr;
-  return threadPool_->getNextLoop(hash);
+  return threadPool_->getLoopForHash(hash);
 }
 
 
