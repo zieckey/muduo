@@ -45,7 +45,7 @@ class EventLoopThreadPool : boost::noncopyable
 
   std::vector<EventLoop*> getAllLoops();
 
-  bool started() const 
+  bool started() const
   { return started_; }
 
  private:
