@@ -45,7 +45,7 @@ class Buffer : public muduo::copyable
   static const size_t kCheapPrepend = 8;
   static const size_t kInitialSize = 1024;
 
-  Buffer(size_t initialSize = kInitialSize)
+  explicit Buffer(size_t initialSize = kInitialSize)
     : buffer_(kCheapPrepend + initialSize),
       readerIndex_(kCheapPrepend),
       writerIndex_(kCheapPrepend)

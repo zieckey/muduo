@@ -68,14 +68,14 @@ EventLoop* EventLoopThreadPool::getNextLoop()
   return loop;
 }
 
-EventLoop* EventLoopThreadPool::getLoopForHash(uint64_t hashCode)
+EventLoop* EventLoopThreadPool::getLoopForHash(size_t hashCode)
 {
   baseLoop_->assertInLoopThread();
   EventLoop* loop = baseLoop_;
 
   if (!loops_.empty())
   {
-    loop = loops_[hashCode % threads_.size()];
+    loop = loops_[hashCode % loops_.size()];
   }
   return loop;
 }
