@@ -1,6 +1,9 @@
 add_executable(netty_echo_client client.cc)
 target_link_libraries(netty_echo_client muduo_net)
 
+add_executable(netty_echo_client2 client2.cc)
+target_link_libraries(netty_echo_client2 muduo_net)
+
 add_executable(netty_echo_server server.cc)
 target_link_libraries(netty_echo_server muduo_net)
 
