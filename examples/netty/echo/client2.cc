@@ -18,9 +18,9 @@ using namespace muduo::net;
 class EchoClient : boost::noncopyable
 {
  public:
-  EchoClient(EventLoop* loop, const InetAddress& listenAddr, int size)
+  EchoClient(EventLoop* loop, const InetAddress& serverAddr, int size)
     : loop_(loop),
-      client_(loop, listenAddr, "EchoClient"),
+      client_(loop, serverAddr, "EchoClient"),
       message_(size, 'H')
   {
     client_.setConnectionCallback(
@@ -29,9 +29,13 @@ class EchoClient : boost::noncopyable
         boost::bind(&EchoClient::onMessage, this, _1, _2, _3));
   }
 
-  void connect(const InetAddress& localAddr)
+  void bind(const InetAddress& localAddr)
   {
     client_.bind(localAddr);
+  }
+
+  void connect()
+  {
     client_.connect();
   }
 
@@ -79,7 +83,8 @@ int main(int argc, char* argv[])
     }
 
     EchoClient client(&loop, serverAddr, size);
-    client.connect(localAddr);
+    client.bind(localAddr);
+    client.connect();
     loop.loop();
   }
   else
