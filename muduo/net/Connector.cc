@@ -89,7 +89,8 @@ void Connector::stopInLoop()
 void Connector::connect()
 {
   int sockfd = sockets::createNonblockingOrDie();
-  if (!bind(sockfd)) {
+  if (!bind(sockfd))
+  {
       sockets::close(sockfd);
       return;
   }
@@ -135,13 +136,15 @@ bool Connector::bind(int sockfd)
 {
   const struct sockaddr_in& localSockAddr = localAddr_.getSockAddrInet();
   if (localSockAddr.sin_addr.s_addr == kInaddrAny
-       && localSockAddr.sin_port == 0) {
+       && localSockAddr.sin_port == 0)
+  {
     return true; // no need to do bind
   }
   const struct sockaddr* sa = sockets::sockaddr_cast(&localSockAddr);
   int ret = ::bind(sockfd, sa, sizeof(*sa));
   int savedErrno = (ret == 0) ? 0 : errno;
-  if (ret != 0) {
+  if (ret != 0)
+  {
     LOG_SYSERR << "Unexpected error in Connector::bind errno="
         << savedErrno << " " << strerror(savedErrno);
     return false;
