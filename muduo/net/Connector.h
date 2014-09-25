@@ -38,11 +38,15 @@ class Connector : boost::noncopyable,
   void setNewConnectionCallback(const NewConnectionCallback& cb)
   { newConnectionCallback_ = cb; }
 
+  // If you really want to call bind, please call it before start()
+  void bind(const InetAddress& localAddr);
+
   void start();  // can be called in any thread
   void restart();  // must be called in loop thread
   void stop();  // can be called in any thread
 
   const InetAddress& serverAddress() const { return serverAddr_; }
+  const InetAddress& localAddress() const { return localAddr_; }
 
  private:
   enum States { kDisconnected, kConnecting, kConnected };
@@ -50,6 +54,7 @@ class Connector : boost::noncopyable,
   static const int kInitRetryDelayMs = 500;
 
   void setState(States s) { state_ = s; }
+  bool bind(int sockfd);
   void startInLoop();
   void stopInLoop();
   void connect();
@@ -62,6 +67,7 @@ class Connector : boost::noncopyable,
 
   EventLoop* loop_;
   InetAddress serverAddr_;
+  InetAddress localAddr_;
   bool connect_; // atomic
   States state_;  // FIXME: use atomic variable
   boost::scoped_ptr<Channel> channel_;

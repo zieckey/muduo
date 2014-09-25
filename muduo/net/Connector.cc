@@ -23,6 +23,10 @@ using namespace muduo::net;
 
 const int Connector::kMaxRetryDelayMs;
 
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+static const uint32_t kInaddrAny = INADDR_ANY;
+#pragma GCC diagnostic error "-Wold-style-cast"
+
 Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
   : loop_(loop),
     serverAddr_(serverAddr),
@@ -37,6 +41,11 @@ Connector::~Connector()
 {
   LOG_DEBUG << "dtor[" << this << "]";
   assert(!channel_);
+}
+
+void Connector::bind(const InetAddress& localAddr)
+{
+  localAddr_ = localAddr;
 }
 
 void Connector::start()
@@ -80,6 +89,11 @@ void Connector::stopInLoop()
 void Connector::connect()
 {
   int sockfd = sockets::createNonblockingOrDie();
+  if (!bind(sockfd))
+  {
+      sockets::close(sockfd);
+      return;
+  }
   int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet());
   int savedErrno = (ret == 0) ? 0 : errno;
   switch (savedErrno)
@@ -116,6 +130,27 @@ void Connector::connect()
       // connectErrorCallback_();
       break;
   }
+}
+
+bool Connector::bind(int sockfd)
+{
+  const struct sockaddr_in& localSockAddr = localAddr_.getSockAddrInet();
+  if (localSockAddr.sin_addr.s_addr == kInaddrAny
+       && localSockAddr.sin_port == 0)
+  {
+    return true; // no need to do bind
+  }
+  const struct sockaddr* sa = sockets::sockaddr_cast(&localSockAddr);
+  int ret = ::bind(sockfd, sa, sizeof(*sa));
+  int savedErrno = (ret == 0) ? 0 : errno;
+  if (ret != 0)
+  {
+    LOG_SYSERR << "Unexpected error in Connector::bind errno="
+        << savedErrno << " " << strerror(savedErrno);
+    return false;
+  }
+
+  return true;
 }
 
 void Connector::restart()
