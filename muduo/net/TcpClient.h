@@ -34,6 +34,9 @@ class TcpClient : boost::noncopyable
             const string& name);
   ~TcpClient();  // force out-line dtor, for scoped_ptr members.
 
+  // If you really want to call bind, please call it before connect()
+  void bind(const InetAddress& localAddr);
+
   void connect();
   void disconnect();
   void stop();
