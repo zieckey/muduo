@@ -20,6 +20,8 @@ using namespace muduo::net;
 typedef boost::shared_ptr<TcpClient> TcpClientPtr;
 typedef std::set<TcpClientPtr> TcpClientSet;
 
+static bool localBind = false;
+
 void onConnection(TcpClientPtr tc, const TcpConnectionPtr& conn)
 {
   LOG_TRACE << conn->localAddress().toIpPort() << " -> "
@@ -47,7 +49,10 @@ TcpClientPtr newTcpClient(EventLoop* loop,
           localAddr.toIpPort() + "->" + serverAddr.toIpPort()));
   c->setConnectionCallback(boost::bind(&onConnection, c, _1));
   c->setMessageCallback(boost::bind(&onMessage, c, _1, _2, _3));
-  c->bind(localAddr);
+  if (localBind)
+  {
+    c->bind(localAddr);
+  }
   c->connect();
   return c;
 }
@@ -73,7 +78,7 @@ void usage(char* argv[])
         -S <firstServerIp> -N <serverIpNum>\
         -t <threadNum> -c <connPerIp>\
         -P <firstLocalPort> -m <localPortNum>\
-        -l <messageLen> -i <sendMessageIntervalMs> -h\n", argv[0]);
+        -l <messageLen> -i <sendMessageIntervalMs> -h -b\n", argv[0]);
   printf("-H The tcp server ip to connect to\n");
   printf("-p The tcp server listened port\n");
   printf("-s The first local ip to bind\n");
@@ -86,6 +91,7 @@ void usage(char* argv[])
   printf("-i The interval time (ms) between the message sending to server\n");
   printf("-P The first local port, default 0\n");
   printf("-m The total number of local port, default 1\n");
+  printf("-b Do the local binding, default false\n");
 }
 
 string getLocalIp(const char* firstLocalIp, int index)
@@ -113,7 +119,7 @@ int main(int argc, char* argv[])
   int localPortNum = 1;
   int firstLocalPort = 0;
   int c;
-  while (-1 != (c = getopt(argc, argv, "p:s:n:S:N:t:l:i:m:P:h")))
+  while (-1 != (c = getopt(argc, argv, "p:s:n:S:N:t:l:i:m:P:bh")))
   {
     switch (c)
     {
@@ -153,6 +159,8 @@ int main(int argc, char* argv[])
       case 'h':
         usage(argv);
         return -1;
+      case 'b':
+        localBind = true;
       default:
         fprintf(stderr, "Illegal argument \"%c\"\n", c);
         usage(argv);
