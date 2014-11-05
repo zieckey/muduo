@@ -29,6 +29,11 @@ Hiredis::~Hiredis()
   ::redisAsyncFree(context_);
 }
 
+bool Hiredis::connected() const
+{
+  return channel_ && context_ && (context_->c.flags & REDIS_CONNECTED);
+}
+
 const char* Hiredis::errstr() const
 {
   assert(context_ != NULL);
@@ -54,6 +59,15 @@ void Hiredis::connect()
   assert(context_->onDisconnect == NULL);
   ::redisAsyncSetConnectCallback(context_, connectCallback);
   ::redisAsyncSetDisconnectCallback(context_, disconnectCallback);
+}
+
+void Hiredis::disconnect()
+{
+  if (connected())
+  {
+    LOG_DEBUG << this;
+    ::redisAsyncDisconnect(context_);
+  }
 }
 
 int Hiredis::fd() const
@@ -185,11 +199,13 @@ void Hiredis::cleanup(void* privdata)
 {
   Hiredis* hiredis = static_cast<Hiredis*>(privdata);
   LOG_DEBUG << hiredis;
-  //FIXME: hiredis->removeChannel(); ??
 }
 
 int Hiredis::command(const CommandCallback& cb, muduo::StringArg cmd, ...)
 {
+  if (!connected()) return REDIS_ERR;
+
+  LOG_TRACE;
   CommandCallback* p = new CommandCallback(cb);
   va_list args;
   va_start(args, cmd);
