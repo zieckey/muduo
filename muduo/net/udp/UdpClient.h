@@ -64,6 +64,9 @@ class UdpClient : public boost::noncopyable,
   void setContext(const boost::any& context)
   { context_ = context; }
 
+  const InetAddress& serverAddr() const
+  { return serverAddr_; }
+
   const boost::any& getContext() const
   { return context_; }
 
