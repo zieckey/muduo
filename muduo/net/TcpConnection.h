@@ -101,6 +101,9 @@ class TcpConnection : boost::noncopyable,
   Buffer* outputBuffer()
   { return &outputBuffer_; }
 
+  Channel* channel()
+  { return channel_.get(); }
+
   /// Internal use only.
   void setCloseCallback(const CloseCallback& cb)
   { closeCallback_ = cb; }
