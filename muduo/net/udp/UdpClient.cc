@@ -25,11 +25,11 @@ using namespace muduo;
 using namespace muduo::net;
 
 UdpClient::UdpClient(EventLoop* loop,
-                     const InetAddress& serverAddr,
+                     const InetAddress& svrAddr,
                      const string& name)
   : loop_(CHECK_NOTNULL(loop)),
     name_(name),
-    serverAddr_(serverAddr),
+    serverAddr_(svrAddr),
     connect_(false)
 {
   LOG_INFO << "UdpClient::UdpClient[" << name_
