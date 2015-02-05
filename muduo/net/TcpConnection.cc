@@ -45,11 +45,13 @@ TcpConnection::TcpConnection(EventLoop* loop,
   : loop_(CHECK_NOTNULL(loop)),
     name_(nameArg),
     state_(kConnecting),
+    direction_(kOutgoing),
     socket_(new Socket(sockfd)),
     channel_(new Channel(loop, sockfd)),
     localAddr_(localAddr),
     peerAddr_(peerAddr),
-    highWaterMark_(64*1024*1024)
+    highWaterMark_(64*1024*1024),
+    forceCloseDelaySeconds_(10.0)
 {
   channel_->setReadCallback(
       boost::bind(&TcpConnection::handleRead, this, _1));
@@ -68,7 +70,7 @@ TcpConnection::~TcpConnection()
 {
   LOG_DEBUG << "TcpConnection::dtor[" <<  name_ << "] at " << this
             << " fd=" << channel_->fd()
-            << " state=" << stateString();
+            << " state=" << stateToString();
   assert(state_ == kDisconnected);
 }
 
@@ -137,7 +139,6 @@ void TcpConnection::sendInLoop(const StringPiece& message)
 
 void TcpConnection::sendInLoop(const void* data, size_t len)
 {
-  LOG_DEBUG << "state=" << state_;
   loop_->assertInLoopThread();
   ssize_t nwrote = 0;
   size_t remaining = len;
@@ -269,7 +270,7 @@ void TcpConnection::forceCloseInLoop()
   }
 }
 
-const char* TcpConnection::stateString()
+const char* TcpConnection::stateToString()
 {
   switch(state_)
   {
@@ -326,7 +327,20 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   }
   else if (n == 0)
   {
-    handleClose();
+    if (direction_ == kOutgoing)
+    {
+      handleClose();
+    }
+    else
+    {
+      // incoming connection - we need to leave the request on the
+      // connection so that we can reply to it.
+      channel_->disableReading();
+      LOG_DEBUG << "channel_->disableReading";
+      loop_->runAfter(
+            forceCloseDelaySeconds_,
+            makeWeakCallback(shared_from_this(), &TcpConnection::forceClose));
+    }
   }
   else
   {
@@ -379,7 +393,7 @@ void TcpConnection::handleWrite()
 void TcpConnection::handleClose()
 {
   loop_->assertInLoopThread();
-  LOG_TRACE << "fd = " << channel_->fd() << " state = " << stateString();
+  LOG_TRACE << "fd = " << channel_->fd() << " state = " << stateToString();
   assert(state_ == kConnected || state_ == kDisconnecting);
   // we don't close fd, leave it to dtor, so we can find leaks easily.
   setState(kDisconnected);
