@@ -137,6 +137,7 @@ void TcpConnection::sendInLoop(const StringPiece& message)
 
 void TcpConnection::sendInLoop(const void* data, size_t len)
 {
+  LOG_DEBUG << "state=" << state_;
   loop_->assertInLoopThread();
   ssize_t nwrote = 0;
   size_t remaining = len;
@@ -185,6 +186,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     outputBuffer_.append(static_cast<const char*>(data)+nwrote, remaining);
     if (!channel_->isWriting())
     {
+      LOG_DEBUG << "channel_->enableWriting";
       channel_->enableWriting();
     }
   }

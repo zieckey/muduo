@@ -19,6 +19,8 @@ class EchoServer
                  muduo::net::Buffer* buf,
                  muduo::Timestamp time);
 
+  void delaySend(const muduo::net::TcpConnectionPtr& conn, const muduo::string& msg);
+
   muduo::net::TcpServer server_;
 };
 

@@ -1,6 +1,7 @@
 #include "echo.h"
 
 #include <muduo/base/Logging.h>
+#include <muduo/net/EventLoop.h>
 
 #include <boost/bind.hpp>
 
@@ -36,6 +37,10 @@ void EchoServer::onMessage(const muduo::net::TcpConnectionPtr& conn,
   muduo::string msg(buf->retrieveAllAsString());
   LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, "
            << "data received at " << time.toString();
-  conn->send(msg);
+  conn->getLoop()->runAfter(0.001, boost::bind(&EchoServer::delaySend, this, conn, msg));
 }
 
+
+void EchoServer::delaySend(const muduo::net::TcpConnectionPtr& conn, const muduo::string& msg) {
+  conn->send(msg);
+}
