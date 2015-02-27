@@ -1,11 +1,11 @@
 Name:	
 Version: 
 Release: 
-Summary:	Qihoo Cloudops
+Summary:	zieckey
 
 License:	GPL
 Autoreq:	no
-#Requires:	Qihoo-lockf
+#Requires:	
 %description
 
 %pre
@@ -34,7 +34,6 @@ fi
 %files
 %defattr(-,root,root,-)
 #/etc/init.d/nrped_monitor
-#/home/s/apps/CloudSafeLine/monitor
 #%config(noreplace)
 
 /home/s/safe
