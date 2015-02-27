@@ -5,7 +5,7 @@ IsDeving="true"
 WORKDIR=$PWD
 if [ $# -lt 1 ]
 then
-	echo "没有要打包的程序"
+	echo "Not find the package to build."
 	exit 1
 fi
 
@@ -63,22 +63,22 @@ SPECFILE=${PROJ}/${PROJ}.spec
 
 if [ ! -s ${WORKDIR}/${PROJ}/${PROJ}.spec ]
 then
-	ReportWarn "没有spec文件：${WORKDIR}/${PROJ}/${PROJ}.spec"
+	ReportWarn "no spec file : ${WORKDIR}/${PROJ}/${PROJ}.spec"
 fi
 
 if [ -s ${WORKDIR}/${PROJ}/VISION ]
 then
 	VERSION=`cat ${WORKDIR}/${PROJ}/VISION`
-	ReportInfo "使用VISION文件版本${VERSION}"
+	ReportInfo "VISION ${VERSION}"
 else
 	VERSION=0.1
-	ReportInfo "使用默认版本0.1"
+	ReportInfo "Use the default version 0.1"
 fi
 
 if [ $# -eq 2 ]
 then
 	VERSION=$2
-	ReportInfo "使用自定义版本${VERSION}"
+	ReportInfo "Use the user defined VERSION ${VERSION}"
 fi
 
 echo ${VERSION} > ${WORKDIR}/${PROJ}/VISION
@@ -91,7 +91,7 @@ then
 	BUILT=`cat ${BUILDSN}`
 	[ ${BUILD} -gt ${BUILT} ] || BUILD=`expr ${BUILT} + 1`
 fi
-ReportInfo "使用release号${BUILD}"
+ReportInfo "Use release build number ${BUILD}"
 echo ${BUILD} > ${BUILDSN}
 
 MACHINE=`uname -m`
@@ -127,10 +127,10 @@ rpmbuild --define "_topdir ${TMP_DIR}" \
 RPMBUILDERR=$?
 if [ ${RPMBUILDERR} -ne 0 ]
 then
-	ReportWarn "打包失败"
+	ReportWarn "rpm build failed!"
 else
 	scp ${WORKDIR}/RPMS/${MACHINE}/${PROJ}-${VERSION}-${RELEASE}.${MACHINE}.rpm ${WORKDIR}/${PROJ}/
 	scp ${WORKDIR}/RPMS/${MACHINE}/${PROJ}-${VERSION}-${RELEASE}.${MACHINE}.rpm /home/cloud/rpm/
 	rm -rf ${TMP_DIR}
-	ReportInfo "打包成功结束"
+	ReportInfo "rpm build done!"
 fi

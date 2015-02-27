@@ -25,44 +25,44 @@ function ReportWarn
 
 if [ $# -lt 1 ]
 then
-	ReportWarn "没有需要打包的项目"
+	ReportWarn "Not find the package to build."
 fi
 
 for i in `echo $@`
 do
 	if [ -d $i ]
 	then
-		Msg="重建$i： "
+		Msg="rebuild $i： "
 	else
 		mkdir $i
-		Msg="新建$i： "
+		Msg="mkdir $i : "
 	fi
 	if [ -s $i/BUILDSN ]
 	then
-		Msg=${Msg}"保留BUILDSN "
+		Msg=${Msg}"reuse BUILDSN "
 	else
 		echo 0 > $i/BUILDSN
-		Msg=${Msg}"新建BUILDSN 0 "
+		Msg=${Msg}"new BUILDSN 0 "
 	fi
 	if [ -s $i/VISION ]
 	then
-		Msg=${Msg}"保留VISION "
+		Msg=${Msg}"reuse VISION "
 	else
 		echo 0.1 > $i/VISION
-		Msg=${Msg}"新建VISION 0.1 "
+		Msg=${Msg}"new VISION 0.1 "
 	fi
 	if [ -d $i/src ]
 	then
 		rm -rf $i/src
-		Msg=${Msg}"清空$i/src "
+		Msg=${Msg}"rm $i/src "
 	else
-		Msg=${Msg}"新建$i/src "
+		Msg=${Msg}"new $i/src "
 	fi
 	mkdir -p $i/src
 	if [ ! -s $i/$i.spec ]
 	then
 		scp sample.spec $i/$i.spec
-		Msg=${Msg}"复制$i.spec "
+		Msg=${Msg}"copy $i.spec "
 	fi
 	ReportInfo "${Msg}"
 	Msg=""
