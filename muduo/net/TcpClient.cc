@@ -103,6 +103,11 @@ TcpClient::~TcpClient()
   }
 }
 
+void TcpClient::bind(const InetAddress& localAddr)
+{
+  connector_->bind(localAddr);
+}
+
 void TcpClient::connect()
 {
   // FIXME: check state

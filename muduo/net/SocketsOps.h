@@ -49,6 +49,8 @@ struct sockaddr* sockaddr_cast(struct sockaddr_in* addr);
 const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 struct sockaddr_in* sockaddr_in_cast(struct sockaddr* addr);
 
+bool setNonblocking(int sockfd);
+
 struct sockaddr_in getLocalAddr(int sockfd);
 struct sockaddr_in getPeerAddr(int sockfd);
 bool isSelfConnect(int sockfd);
