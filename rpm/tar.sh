@@ -1,4 +1,4 @@
-git co build
+#git co build
 WORKDIR=`pwd`
 cd ../..
 TARGET=home/s/safe
