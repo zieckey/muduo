@@ -1,7 +1,7 @@
 
-chenshuo -----> udpdev --> master
-  |             ^
-  |---> mdev ---| 
+chenshuomaster -----> udpdev --> master
+  |                     ^
+  |---> mdev -----------| 
 
 udpdev : the udp relative code here
 mdev   : the basic modified code from chenshuo's master branch
