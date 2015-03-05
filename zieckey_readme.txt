@@ -1,14 +1,13 @@
 
-chenshuomaster -----> udpdev --> master
-  |                     ^
-  |---> mdev -----------| 
+chenshuomaster -----> master
+  |                     ^  \
+  |---> mdev -----------|   ---> debug
 
-udpdev : the udp relative code here
 mdev   : the basic modified code from chenshuo's master branch
-build  : evnvironment relative code
+debug  : used for debug
 
 
-more feature :
+The master branch has some features :
   - UDP support
   - client bind support
   - fix half closing problem
