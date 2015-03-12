@@ -1,6 +1,9 @@
 #include "echo.h"
 
 #include <muduo/base/Logging.h>
+#include <muduo/net/Channel.h>
+#include <muduo/net/EventLoop.h>
+#include <muduo/net/TcpConnection.h>
 
 #include <boost/bind.hpp>
 
@@ -37,5 +40,7 @@ void EchoServer::onMessage(const muduo::net::TcpConnectionPtr& conn,
   LOG_INFO << conn->name() << " echo " << msg.size() << " bytes, "
            << "data received at " << time.toString();
   conn->send(msg);
+  conn->channel()->disableReading();
+  conn->getLoop()->runAfter(10.0, boost::bind(&muduo::net::TcpConnection::forceClose, conn));
 }
 
