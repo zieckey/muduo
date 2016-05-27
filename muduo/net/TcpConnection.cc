@@ -51,7 +51,8 @@ TcpConnection::TcpConnection(EventLoop* loop,
     localAddr_(localAddr),
     peerAddr_(peerAddr),
     highWaterMark_(64*1024*1024),
-    forceCloseDelaySeconds_(30.0)
+    forceCloseDelaySeconds_(30.0),
+    reading_(true)
 {
   channel_->setReadCallback(
       boost::bind(&TcpConnection::handleRead, this, _1));
@@ -289,6 +290,36 @@ const char* TcpConnection::stateToString() const
 void TcpConnection::setTcpNoDelay(bool on)
 {
   socket_->setTcpNoDelay(on);
+}
+
+void TcpConnection::startRead()
+{
+  loop_->runInLoop(boost::bind(&TcpConnection::startReadInLoop, this));
+}
+
+void TcpConnection::startReadInLoop()
+{
+  loop_->assertInLoopThread();
+  if (!reading_ || !channel_->isReading())
+  {
+    channel_->enableReading();
+    reading_ = true;
+  }
+}
+
+void TcpConnection::stopRead()
+{
+  loop_->runInLoop(boost::bind(&TcpConnection::stopReadInLoop, this));
+}
+
+void TcpConnection::stopReadInLoop()
+{
+  loop_->assertInLoopThread();
+  if (reading_ || channel_->isReading())
+  {
+    channel_->disableReading();
+    reading_ = false;
+  } 
 }
 
 void TcpConnection::connectEstablished()
