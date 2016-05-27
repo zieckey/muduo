@@ -60,15 +60,16 @@ bool UdpClient::connect()
   sockets::setNonblocking(sockfd);
 
 #ifdef _DO_UDP_CONNECT
-  const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
-  socklen_t addrLen = sizeof(remoteAddr);
-  int ret = ::connect(sockfd, sockets::sockaddr_cast(&remoteAddr), addrLen);
+  const struct sockaddr_in* remoteAddr =
+      sockets::sockaddr_in_cast(serverAddr_.getSockAddrInet());
+  socklen_t addrLen = sizeof(*remoteAddr);
+  int ret = ::connect(sockfd, sockets::sockaddr_cast(remoteAddr), addrLen);
 
   if (ret != 0)
   {
     int  savedErrno = errno;
     close();
-    const struct sockaddr_in *paddr = &remoteAddr;
+    const struct sockaddr_in *paddr = remoteAddr;
     LOG_ERROR << "Failed to connect to remote IP="
         << inet_ntoa(paddr->sin_addr)
         << ", port=" << ntohs(paddr->sin_port)
@@ -200,10 +201,11 @@ void UdpClient::sendInLoop(const void* data, size_t len)
 #ifdef _DO_UDP_CONNECT
   nwrote = ::send(channel_->fd(), data, len, 0);
 #else
-  const struct sockaddr_in& remoteAddr = serverAddr_.getSockAddrInet();
-  socklen_t addrLen = sizeof(remoteAddr);
+  const struct sockaddr_in* remoteAddr =
+      sockets::sockaddr_in_cast(serverAddr_.getSockAddr());
+  socklen_t addrLen = sizeof(*remoteAddr);
   nwrote = ::sendto(channel_->fd(), data, len, 0, 
-              sockets::sockaddr_cast(&remoteAddr), addrLen);
+              sockets::sockaddr_cast(remoteAddr), addrLen);
 #endif
   if (nwrote < 0)
   {

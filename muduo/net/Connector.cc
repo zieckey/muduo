@@ -88,13 +88,19 @@ void Connector::stopInLoop()
 
 void Connector::connect()
 {
-  int sockfd = sockets::createNonblockingOrDie();
-  if (!bind(sockfd))
-  {
-      sockets::close(sockfd);
-      return;
-  }
-  int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet());
+//<<<<<<< HEAD
+//FIXME 20160527
+//  int sockfd = sockets::createNonblockingOrDie();
+//  if (!bind(sockfd))
+//  {
+//      sockets::close(sockfd);
+//      return;
+//  }
+//  int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet());
+//=======
+  int sockfd = sockets::createNonblockingOrDie(serverAddr_.family());
+  int ret = sockets::connect(sockfd, serverAddr_.getSockAddr());
+//>>>>>>> chenshuomaster
   int savedErrno = (ret == 0) ? 0 : errno;
   switch (savedErrno)
   {
@@ -134,13 +140,14 @@ void Connector::connect()
 
 bool Connector::bind(int sockfd)
 {
-  const struct sockaddr_in& localSockAddr = localAddr_.getSockAddrInet();
-  if (localSockAddr.sin_addr.s_addr == kInaddrAny
-       && localSockAddr.sin_port == 0)
+  const struct sockaddr_in* localSockAddr = 
+      sockets::sockaddr_in_cast(localAddr_.getSockAddr());
+  if (localSockAddr->sin_addr.s_addr == kInaddrAny
+       && localSockAddr->sin_port == 0)
   {
     return true; // no need to do bind
   }
-  const struct sockaddr* sa = sockets::sockaddr_cast(&localSockAddr);
+  const struct sockaddr* sa = sockets::sockaddr_cast(localSockAddr);
   int ret = ::bind(sockfd, sa, sizeof(*sa));
   int savedErrno = (ret == 0) ? 0 : errno;
   if (ret != 0)

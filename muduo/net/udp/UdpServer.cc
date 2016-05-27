@@ -30,7 +30,7 @@ UdpServer::UdpServer(EventLoop* loop,
     listenAddr_(listenAddr),
     hostport_(listenAddr.toIpPort()),
     name_(nameArg),
-    threadPool_(new EventLoopThreadPool(loop)),
+    threadPool_(new EventLoopThreadPool(loop, "UdpServer")),
     started_(false)
 {
 }
@@ -67,7 +67,7 @@ void UdpServer::start()
   }
   LOG_TRACE << "create SOCK_DGRAM fd=" << sockfd;
   sockets::setNonblocking(sockfd);
-  sockets::bindOrDie(sockfd, listenAddr_.getSockAddrInet());
+  sockets::bindOrDie(sockfd, listenAddr_.getSockAddr());
 
   int optval = 1;
   int opret = ::setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
