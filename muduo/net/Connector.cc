@@ -89,7 +89,7 @@ void Connector::stopInLoop()
 void Connector::connect()
 {
 //<<<<<<< HEAD
-//FIXME 20160527
+//FIXME TODO weizili 20160527
 //  int sockfd = sockets::createNonblockingOrDie();
 //  if (!bind(sockfd))
 //  {
