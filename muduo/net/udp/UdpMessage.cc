@@ -54,5 +54,3 @@ bool UdpMessage::send(const UdpMessage* msg) {
 }
 }
 
-#
-
