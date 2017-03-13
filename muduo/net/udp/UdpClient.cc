@@ -190,7 +190,6 @@ void UdpClient::sendInLoop(const void* data, size_t len)
 {
   loop_->assertInLoopThread();
   ssize_t nwrote = 0;
-  bool error = false;
   if (!connect_)
   {
     LOG_WARN << "disconnected, give up writing";
@@ -215,7 +214,7 @@ void UdpClient::sendInLoop(const void* data, size_t len)
       LOG_SYSERR << "UdpClient::sendInLoop";
       if (errno == EPIPE) // FIXME: any others?
       {
-        error = true;
+        //TODO
       }
     }
 

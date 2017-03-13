@@ -46,13 +46,13 @@ TcpConnection::TcpConnection(EventLoop* loop,
     name_(nameArg),
     state_(kConnecting),
     direction_(kOutgoing),
+    reading_(true),
     socket_(new Socket(sockfd)),
     channel_(new Channel(loop, sockfd)),
     localAddr_(localAddr),
     peerAddr_(peerAddr),
     highWaterMark_(64*1024*1024),
-    forceCloseDelaySeconds_(30.0),
-    reading_(true)
+    forceCloseDelaySeconds_(30.0)
 {
   channel_->setReadCallback(
       boost::bind(&TcpConnection::handleRead, this, _1));
@@ -319,7 +319,7 @@ void TcpConnection::stopReadInLoop()
   {
     channel_->disableReading();
     reading_ = false;
-  } 
+  }
 }
 
 void TcpConnection::connectEstablished()
